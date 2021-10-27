@@ -1,12 +1,10 @@
 import 'reflect-metadata';
-import * as http from 'http';
 import * as cookieSession from 'cookie-session';
 import * as passport from 'passport';
 import { Strategy } from 'passport-local';
 import { NestFactory } from '@nestjs/core';
-import { INestApplication } from '@nestjs/common';
-import { NextApiHandler } from 'next';
 import { AppModule } from './app.module';
+import { config } from './config';
 
 function usePassport(app) {
   app.use(
@@ -42,43 +40,14 @@ function usePassport(app) {
   app.use(passport.session());
 }
 
-let app: INestApplication;
-let appPromise: Promise<void>;
-
 export const Backend = {
-  async getApp() {
-    if (app) {
-      return app;
-    }
-  
-    if (!appPromise) {
-      appPromise = new Promise(async (resolve) => {
-        const appInCreation = await NestFactory.create(AppModule, {
-          bodyParser: false,
-        });
+  async init() {
+    const app = await NestFactory.create(AppModule, {
+      bodyParser: false,
+    });
 
-        usePassport(appInCreation);
-        console.log('################ App INITIALIZATION! ###########');
-        await appInCreation.init();
-        app = appInCreation;
-        resolve();
-      });
-    }
-
-    await appPromise;
-    return app;
-  },
-
-  async getListener() {
-    const app = await Backend.getApp();
-    const server: http.Server = app.getHttpServer();
-    const requestListeners = server.listeners('request') as NextApiHandler[];
-    const [listener] = requestListeners;
-
-    console.log({ // @ts-ignore
-      'listener._router.stack': listener._router.stack
-    })
-
-    return listener;
-  },
+    usePassport(app);
+    await app.init();
+    await app.listen(config.port);
+  }
 };

@@ -14,10 +14,6 @@ import { UsersModule } from './users/users.module';
       // autoSchemaFile: resolve(process.cwd(), './schema.gql'),
       autoSchemaFile: true,
       context: ({ req }) => {
-        console.log({
-          graphqlRequest: req,
-        })
-
         return { req };
       },
       playground: {

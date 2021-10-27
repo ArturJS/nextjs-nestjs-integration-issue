@@ -1,9 +1,18 @@
 import { Backend } from '../../backend/src/main';
 import { NextApiRequest, NextApiResponse } from 'next';
+import httpProxyMiddleware from 'next-http-proxy-middleware';
 
-export default (req: NextApiRequest, res: NextApiResponse) =>
-  new Promise(async resolve => {
-    const listener = await Backend.getListener();
-    listener(req, res);
-    res.on('finish', resolve);
+Backend.init();
+
+export default function graphqlHandler(req: NextApiRequest, res: NextApiResponse) {
+  const {
+    hostname,
+    port
+  } = new URL(req.url, `http://${req.headers.host}`);
+  const backendPort = Number(port) + 1;
+  const targetUrl = `http://${hostname}:${backendPort}/api/graphql`
+
+  return httpProxyMiddleware(req, res, {
+    target: targetUrl
   });
+}
