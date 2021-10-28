@@ -55,12 +55,13 @@ export const Backend = {
       appPromise = new Promise(async (resolve) => {
         const appInCreation = await NestFactory.create(AppModule, {
           bodyParser: false,
+          logger: ['error', 'warn'],
         });
 
         usePassport(appInCreation);
-        console.log('################ App INITIALIZATION! ###########');
         await appInCreation.init();
         app = appInCreation;
+        app.setGlobalPrefix("api/graphql");
         resolve();
       });
     }
@@ -74,10 +75,6 @@ export const Backend = {
     const server: http.Server = app.getHttpServer();
     const requestListeners = server.listeners('request') as NextApiHandler[];
     const [listener] = requestListeners;
-
-    console.log({ // @ts-ignore
-      'listener._router.stack': listener._router.stack
-    })
 
     return listener;
   },
