@@ -42,32 +42,35 @@ function usePassport(app) {
   app.use(passport.session());
 }
 
-let app: INestApplication;
-let appPromise: Promise<void>;
+// let app: INestApplication;
+// let appPromise: Promise<void>;
+
+console.log('IMPORT Backend from main.ts')
 
 export const Backend = {
   async getApp() {
-    if (app) {
-      return app;
+    if (global.app) {
+      return global.app;
     }
   
-    if (!appPromise) {
-      appPromise = new Promise(async (resolve) => {
+    if (!global.appPromise) {
+      global.appPromise = new Promise<void>(async (resolve) => {
         const appInCreation = await NestFactory.create(AppModule, {
           bodyParser: false,
           logger: ['error', 'warn'],
         });
 
         usePassport(appInCreation);
+        console.log('APP INITIALIZATION')
         await appInCreation.init();
-        app = appInCreation;
-        app.setGlobalPrefix("api/graphql");
+        global.app = appInCreation;
+        global.app.setGlobalPrefix("api/graphql");
         resolve();
       });
     }
 
-    await appPromise;
-    return app;
+    await global.appPromise;
+    return global.app;
   },
 
   async getListener() {
